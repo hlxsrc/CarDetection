@@ -7,7 +7,6 @@
 
 # import the necessary packages
 from imutils.video import FileVideoStream
-from imutils.video import VideoStream
 from imutils.video import FPS
 import numpy as np
 import argparse
@@ -53,6 +52,9 @@ total = 0
 # initialize the FPS counter
 fps = FPS().start()
 
+# global x, y, w, h
+x = y = w = h = 0
+
 # loop over the frames from the video stream
 while vs.more():
 
@@ -96,20 +98,30 @@ while vs.more():
                                          confidence * 100)
             cv2.rectangle(frame, (startX, startY), (endX, endY),
                           COLORS[idx], 2)
+            print("Dimensions: ", startX, startY, endX, endY, label)
             y = startY - 15 if startY - 15 > 15 else startY + 15
             cv2.putText(frame, label, (startX, y),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+
+            x = startX
+            y = startY
+            w = endX - startX
+            h = endY - startY
 
     # show the output frame
     cv2.imshow("Frame", frame)
     key = cv2.waitKey(1) & 0xFF
 
     # if the `k` key was pressed, write the *original* frame to disk
-    # so we can later process it and use it for face recognition
+    # so we can later process it and use it for car recognition
     if key == ord("k"):
         p = os.path.sep.join([args["output"], "{}.png".format(
             str(total).zfill(5))])
-        cv2.imwrite(p, orig)
+
+        # extract the ROI of the *reducted* car
+        car = imutils.resize(frame[y:y + h, x:x + w], width=256)
+        cv2.imwrite(p, car)
+
         total += 1
 
     # if the `q` key was pressed, break from the loop
