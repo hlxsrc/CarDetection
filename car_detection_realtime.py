@@ -39,6 +39,7 @@ vs = VideoStream(src=2).start()
 # allow camera sensor to warmup
 time.sleep(2.0)
 
+# calculate the number of pictures taken (ROI)
 total = 0
 
 # initialize the FPS counter

@@ -4,6 +4,7 @@
 # --model MobileNetSSD_deploy.caffemodel \
 # --video /home/hlxs/Downloads/videos/Sentra.mp4 \
 # --output output/
+# -- confidence 0.7
 
 # import the necessary packages
 from imutils.video import FileVideoStream
@@ -24,7 +25,7 @@ ap.add_argument("-m", "--model", required=True,
 ap.add_argument("-c", "--confidence", type=float, default=0.2,
                 help="minimum probability to filter weak detections")
 ap.add_argument("-v", "--video",
-                help="path to the (optional) video file")
+                help="path to the video file")
 ap.add_argument("-o", "--output", required=True,
                 help="path to output directory")
 args = vars(ap.parse_args())
@@ -44,15 +45,13 @@ net = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
 # handles video file processing
 vs = FileVideoStream(args["video"]).start()
 
-# allow camera sensor to warmup
-time.sleep(2.0)
-
+# calculate the number of pictures taken (ROI)
 total = 0
 
 # initialize the FPS counter
 fps = FPS().start()
 
-# global x, y, w, h
+# global x, y, w, h (for ROI)
 x = y = w = h = 0
 
 # loop over the frames from the video stream
@@ -90,23 +89,31 @@ while vs.more():
             # `detections`, then compute the (x, y)-coordinates of
             # the bounding box for the object
             idx = int(detections[0, 0, i, 1])
-            box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-            (startX, startY, endX, endY) = box.astype("int")
 
-            # draw the prediction on the frame
-            label = "{}: {:.2f}%".format(CLASSES[idx],
-                                         confidence * 100)
-            cv2.rectangle(frame, (startX, startY), (endX, endY),
-                          COLORS[idx], 2)
-            print("Dimensions: ", startX, startY, endX, endY, label)
-            y = startY - 15 if startY - 15 > 15 else startY + 15
-            cv2.putText(frame, label, (startX, y),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+            # condition to only detect cars
+            if CLASSES[idx] == CLASSES[7]:
 
-            x = startX
-            y = startY
-            w = endX - startX
-            h = endY - startY
+                box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+                (startX, startY, endX, endY) = box.astype("int")
+
+                # draw the prediction on the frame
+                label = "{}: {:.2f}%".format(CLASSES[idx],
+                                             confidence * 100)
+
+                # uncomment if bounding box is necessary
+                # cv2.rectangle(frame, (startX, startY), (endX, endY),
+                #              COLORS[idx], 2)
+
+                # uncomment if label is necessary
+                # y = startY - 15 if startY - 15 > 15 else startY + 15
+                # cv2.putText(frame, label, (startX, y),
+                #            cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
+
+                # get dimensions of the roi
+                x = startX
+                y = startY
+                w = endX - startX
+                h = endY - startY
 
     # show the output frame
     cv2.imshow("Frame", frame)
