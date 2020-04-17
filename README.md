@@ -54,6 +54,10 @@ Once the program is running, you can choose between taking a capture of the ROI 
 * "k" for taking a capture
 * "q" to quit the program
 
+## Results 
+
+![Image of car 1](https://raw.githubusercontent.com/hlxsrc/car_detection/master/output/00009.png)
+![Image of car 2](https://raw.githubusercontent.com/hlxsrc/car_detection/master/output/00003.png)
 
 ## Acknowledgments
 
